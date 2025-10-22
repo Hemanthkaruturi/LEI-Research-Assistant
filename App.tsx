@@ -60,7 +60,9 @@ const App: React.FC = () => {
       });
 
       if (!foundRecord) {
-        throw new Error(`Could not verify the legal entity for ${website}. Gemini suggested "${geminiLegalName}", which did not match any LEI records found for "${companyName}".`);
+        // This is a valid outcome, not an error. Inform the user.
+        setInfoMessage(`Found potential LEI records for "${companyName}", but none could be confidently matched to the verified legal name "${geminiLegalName}" from ${website}.`);
+        return;
       }
 
       // Step 4: Format and set the final result
