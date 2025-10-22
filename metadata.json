@@ -1,0 +1,5 @@
+{
+  "name": "LEI Research Assistant",
+  "description": "An application to find a company's Legal Entity Identifier (LEI) by providing its name and website. It uses the GLEIF API and Gemini with Google Search grounding to verify the correct entity.",
+  "requestFramePermissions": []
+}
