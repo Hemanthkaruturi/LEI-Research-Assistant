@@ -44,9 +44,14 @@ export interface GeminiVerificationResult {
     sources: GroundingChunk[];
 }
 
+export interface GeminiVerificationResultWithCost extends GeminiVerificationResult {
+    cost: number;
+}
+
 export interface LEIData {
   lei: string;
   legalName: string;
   address: string;
   sources: GroundingChunk[];
+  cost: number;
 }

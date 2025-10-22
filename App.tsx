@@ -1,10 +1,10 @@
-
 import React, { useState, useCallback } from 'react';
 import type { LEIData } from './types';
 import SearchForm from './components/SearchForm';
 import ResultsDisplay from './components/ResultsDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
+import InfoMessage from './components/InfoMessage';
 import { searchCompanyByName } from './services/gleifService';
 import { getLegalNameAndSources } from './services/geminiService';
 
@@ -12,7 +12,8 @@ import { getLegalNameAndSources } from './services/geminiService';
 const normalizeName = (name: string): string => {
   return name
     .toLowerCase()
-    .replace(/\b(inc|llc|ltd|corp|corporation|gmbh|ag|l\.l\.c|l\.t\.d)\.?\b/g, '') // remove common suffixes
+    // Expanded list of common suffixes
+    .replace(/\b(inc|llc|ltd|corp|corporation|gmbh|ag|sarl|l\.l\.c|l\.t\.d)\.?\b/g, '')
     .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '') // remove punctuation
     .replace(/\s+/g, ' ') // normalize whitespace
     .trim();
@@ -24,12 +25,14 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<LEIData | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
   const handleSearch = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     setResult(null);
+    setInfoMessage(null);
 
     try {
       if (!companyName || !website) {
@@ -39,18 +42,21 @@ const App: React.FC = () => {
       // Step 1: Search GLEIF for potential matches
       const gleifRecords = await searchCompanyByName(companyName);
       if (!gleifRecords || gleifRecords.length === 0) {
-        throw new Error(`No LEI records found for a company named "${companyName}".`);
+        // This is not an error, but a valid result: No LEI found.
+        setInfoMessage(`No LEI record found for "${companyName}". This often means the entity does not have one.`);
+        return; // Gracefully exit the search process
       }
 
-      // Step 2: Use Gemini to find the legal name from the website
-      const { legalName: geminiLegalName, sources } = await getLegalNameAndSources(website);
+      // Step 2: Use Gemini to find the legal name from the website and get cost
+      const { legalName: geminiLegalName, sources, cost } = await getLegalNameAndSources(website);
       const normalizedGeminiName = normalizeName(geminiLegalName);
 
-      // Step 3: Find the best match from GLEIF results
+      // Step 3: Find the best match from GLEIF results using a more flexible check
       const foundRecord = gleifRecords.find(record => {
         const gleifLegalName = record.attributes.entity.legalName.name;
         const normalizedGleifName = normalizeName(gleifLegalName);
-        return normalizedGleifName === normalizedGeminiName;
+        // Use `includes` for a more flexible match instead of strict equality
+        return normalizedGleifName.includes(normalizedGeminiName) || normalizedGeminiName.includes(normalizedGleifName);
       });
 
       if (!foundRecord) {
@@ -72,6 +78,7 @@ const App: React.FC = () => {
         legalName: entity.legalName.name,
         address: addressParts.join(', '),
         sources,
+        cost,
       });
 
     } catch (err: unknown) {
@@ -111,6 +118,7 @@ const App: React.FC = () => {
         <div className="mt-8 w-full">
             {isLoading && <LoadingSpinner />}
             {error && <ErrorMessage message={error} />}
+            {infoMessage && <InfoMessage message={infoMessage} />}
             {result && <ResultsDisplay data={result} />}
         </div>
       </div>

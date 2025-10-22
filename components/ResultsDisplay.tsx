@@ -1,7 +1,7 @@
 
 import React from 'react';
 import type { LEIData } from '../types';
-import { BuildingIcon, LinkIcon } from './icons/IconComponents';
+import { BuildingIcon, LinkIcon, CoinIcon } from './icons/IconComponents';
 
 interface ResultsDisplayProps {
   data: LEIData;
@@ -51,6 +51,20 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ data }) => {
             </ul>
         </div>
       )}
+
+      <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-end text-xs text-slate-500 dark:text-slate-400">
+            <CoinIcon className="h-4 w-4 mr-2 text-green-500" />
+            <span>Estimated API Cost:</span>
+            <span className="font-semibold ml-1 text-slate-700 dark:text-slate-300">
+                {data.cost.toLocaleString('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 6,
+                })}
+            </span>
+        </div>
+      </div>
     </div>
   );
 };

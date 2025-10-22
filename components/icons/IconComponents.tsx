@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const SearchIcon = ({ className }: { className?: string }) => (
@@ -82,5 +81,45 @@ export const WarningIcon = ({ className }: { className?: string }) => (
         <path d="M12 9v4" />
         <path d="M10.24 3.957l-8.24 14.043a1.914 1.914 0 0 0 1.64 2.993h16.72a1.914 1.914 0 0 0 1.64 -2.993l-8.24 -14.043a1.914 1.914 0 0 0 -3.28 0z" />
         <path d="M12 16h.01" />
+    </svg>
+);
+
+export const CoinIcon = ({ className }: { className?: string }) => (
+    <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        className={className} 
+        width="24" 
+        height="24" 
+        viewBox="0 0 24 24" 
+        strokeWidth="2" 
+        stroke="currentColor" 
+        fill="none" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+    >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+        <path d="M14.8 9a2 2 0 0 0 -1.8 -1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1 -1.8 -1" />
+        <path d="M12 6v2m0 8v2" />
+    </svg>
+);
+
+export const InfoIcon = ({ className }: { className?: string }) => (
+    <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        className={className}
+        width="24" 
+        height="24" 
+        viewBox="0 0 24 24" 
+        strokeWidth="2" 
+        stroke="currentColor" 
+        fill="none" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+    >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+        <path d="M12 9h.01" />
+        <path d="M11 12h1v4h1" />
     </svg>
 );

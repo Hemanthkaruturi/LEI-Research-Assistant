@@ -1,8 +1,14 @@
 
 import { GoogleGenAI } from "@google/genai";
-import type { GeminiVerificationResult, GroundingChunk } from '../types';
+import type { GeminiVerificationResultWithCost, GroundingChunk } from '../types';
 
-export const getLegalNameAndSources = async (website: string): Promise<GeminiVerificationResult> => {
+// Estimated pricing for demonstration purposes.
+// Real pricing is based on tokens, but we use characters for this example.
+// Based on a model like Gemini 1.5 Flash at ~$0.35/1M input chars & ~$1.05/1M output chars.
+const COST_PER_INPUT_CHAR = 0.35 / 1_000_000;
+const COST_PER_OUTPUT_CHAR = 1.05 / 1_000_000;
+
+export const getLegalNameAndSources = async (website: string): Promise<GeminiVerificationResultWithCost> => {
     if (!process.env.API_KEY) {
         throw new Error("API_KEY environment variable not set");
     }
@@ -26,8 +32,13 @@ export const getLegalNameAndSources = async (website: string): Promise<GeminiVer
         }
         
         const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] || [];
+
+        // Calculate estimated cost
+        const inputChars = prompt.length;
+        const outputChars = legalName.length;
+        const cost = (inputChars * COST_PER_INPUT_CHAR) + (outputChars * COST_PER_OUTPUT_CHAR);
         
-        return { legalName, sources };
+        return { legalName, sources, cost };
 
     } catch (error) {
         console.error("Error calling Gemini API:", error);
