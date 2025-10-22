@@ -5,7 +5,7 @@ Main business logic for finding and verifying Legal Entity Identifiers.
 
 import re
 from typing import Dict, Optional, List
-from .services.gleif_service import GLEIFService
+from .services.gleif_service import GLEIFClient
 from .services.gemini_service import GeminiService
 
 
@@ -19,7 +19,7 @@ class LEILookup:
         Args:
             gemini_api_key: Google Generative AI API key
         """
-        self.gleif_service = GLEIFService()
+        self.gleif_client = GLEIFClient()
         self.gemini_service = GeminiService(gemini_api_key)
 
     def find_lei(self, company_name: str, website: str) -> Dict:
@@ -46,7 +46,7 @@ class LEILookup:
         """
         try:
             # Step 1: Search GLEIF database
-            lei_records = self.gleif_service.search_lei(company_name)
+            lei_records = self.gleif_client.get_lei_by_company_name(company_name)
 
             if not lei_records:
                 return {
@@ -77,33 +77,13 @@ class LEILookup:
                     )
                 }
 
-            # Step 4: Extract and return verified information
-            lei_info = self.gleif_service.extract_lei_info(matched_record)
-
-            if not lei_info:
-                return {
-                    "success": False,
-                    "message": "Could not extract LEI information from the matched record."
-                }
-
-            # Build address string
-            address_parts = []
-            if lei_info.get("address_lines"):
-                address_parts.extend(lei_info["address_lines"])
-            if lei_info.get("city"):
-                address_parts.append(lei_info["city"])
-            if lei_info.get("region"):
-                address_parts.append(lei_info["region"])
-            if lei_info.get("postal_code"):
-                address_parts.append(lei_info["postal_code"])
-            if lei_info.get("country"):
-                address_parts.append(lei_info["country"])
-
+            # Step 4: Return verified information
+            # Note: matched_record is already in the simplified format from GLEIFClient
             return {
                 "success": True,
-                "lei": lei_info["lei"],
-                "legal_name": lei_info["legal_name"],
-                "address": ", ".join(filter(None, address_parts)),
+                "lei": matched_record["lei"],
+                "legal_name": matched_record["legal_name"],
+                "address": matched_record["address"],
                 "sources": gemini_result.get("sources", []),
                 "estimated_cost": gemini_result.get("estimated_cost", 0.0)
             }
@@ -119,7 +99,7 @@ class LEILookup:
         Find a matching LEI record using flexible name matching.
 
         Args:
-            records: List of GLEIF LEI records
+            records: List of GLEIF LEI records (already in simplified format)
             gemini_name: Legal name verified by Gemini
 
         Returns:
@@ -128,11 +108,10 @@ class LEILookup:
         normalized_gemini = self._normalize_name(gemini_name)
 
         for record in records:
-            lei_info = self.gleif_service.extract_lei_info(record)
-            if not lei_info or not lei_info.get("legal_name"):
+            if not record.get("legal_name"):
                 continue
 
-            normalized_gleif = self._normalize_name(lei_info["legal_name"])
+            normalized_gleif = self._normalize_name(record["legal_name"])
 
             # Bidirectional matching: check if either name contains the other
             if normalized_gemini in normalized_gleif or normalized_gleif in normalized_gemini:
